@@ -104,7 +104,9 @@ func (service *Service) httpRequest(requestConfig *go_http.RequestConfig) (*http
 }
 
 func (service *Service) url(path string) string {
-	return fmt.Sprintf("%s/%s/%s%s", apiURL, service.baseID, url.QueryEscape(service.tableName), path)
+	t := &url.URL{Path: service.tableName}
+
+	return fmt.Sprintf("%s/%s/%s%s", apiURL, service.baseID, t.String(), path)
 }
 
 func (service *Service) APIName() string {

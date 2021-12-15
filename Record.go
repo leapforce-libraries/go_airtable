@@ -1,7 +1,9 @@
 package airtable
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 
 	a_types "github.com/leapforce-libraries/go_airtable/types"
@@ -15,9 +17,9 @@ type Records struct {
 }
 
 type Record struct {
-	ID          string                 `json:"id"`
-	Fields      map[string]string      `json:"fields"`
-	CreatedTime a_types.DateTimeString `json:"createdTime"`
+	ID          string                     `json:"id"`
+	Fields      map[string]json.RawMessage `json:"fields"`
+	CreatedTime a_types.DateTimeString     `json:"createdTime"`
 }
 
 type GetRecordsConfig struct {
@@ -37,54 +39,59 @@ type GetRecordsConfig struct {
 
 // GetRecords returns all records
 //
-func (service *Service) GetRecords(config *GetRecordsConfig) ([]Record, *errortools.Error) {
+func (service *Service) GetRecords(config *GetRecordsConfig) (*[]Record, *errortools.Error) {
 	records := []Record{}
 
 	pageSize := defaultPageSize
-
-	if config.PageSize != nil {
-		pageSize = *config.PageSize
-	}
-
 	params := url.Values{}
-	if config.Fields != nil {
-		for _, field := range *config.Fields {
-			params.Add("fields[]", field)
+
+	if config != nil {
+		if config.PageSize != nil {
+			pageSize = *config.PageSize
+		}
+
+		if config.Fields != nil {
+			for _, field := range *config.Fields {
+				params.Add("fields[]", field)
+			}
+		}
+		if config.FilterByFormula != nil {
+			params.Set("filterByFormula", *config.FilterByFormula)
+		}
+		if config.MaxRecords != nil {
+			params.Set("maxRecords", fmt.Sprintf("%v", *config.MaxRecords))
+		}
+		if config.Sort != nil {
+			for i, sort := range *config.Sort {
+				params.Add(fmt.Sprintf("sort[%v][field]", i), sort.Field)
+				params.Add(fmt.Sprintf("sort[%v][direction]", i), sort.Direction)
+			}
+		}
+		if config.View != nil {
+			params.Set("view", *config.View)
+		}
+		if config.CellFormat != nil {
+			params.Set("cellFormat", *config.CellFormat)
+		}
+		if config.TimeZone != nil {
+			params.Set("timeZone", *config.TimeZone)
+		}
+		if config.UserLocale != nil {
+			params.Set("userLocale", *config.UserLocale)
 		}
 	}
-	if config.FilterByFormula != nil {
-		params.Set("filterByFormula", *config.FilterByFormula)
-	}
-	if config.MaxRecords != nil {
-		params.Set("maxRecords", fmt.Sprintf("%v", *config.MaxRecords))
-	}
+
 	params.Set("pageSize", fmt.Sprintf("%v", pageSize))
-	if config.Sort != nil {
-		for i, sort := range *config.Sort {
-			params.Add(fmt.Sprintf("sort[%v][field]", i), sort.Field)
-			params.Add(fmt.Sprintf("sort[%v][direction]", i), sort.Direction)
-		}
-	}
-	if config.View != nil {
-		params.Set("view", *config.View)
-	}
-	if config.CellFormat != nil {
-		params.Set("cellFormat", *config.CellFormat)
-	}
-	if config.TimeZone != nil {
-		params.Set("timeZone", *config.TimeZone)
-	}
-	if config.UserLocale != nil {
-		params.Set("userLocale", *config.UserLocale)
-	}
 
 	for {
 		_records := Records{}
 
 		requestConfig := go_http.RequestConfig{
+			Method:        http.MethodGet,
 			URL:           service.url(fmt.Sprintf("?%s", params.Encode())),
 			ResponseModel: &_records,
 		}
+		fmt.Println(requestConfig.URL)
 		_, _, e := service.httpRequest(&requestConfig)
 		if e != nil {
 			return nil, e
@@ -99,5 +106,5 @@ func (service *Service) GetRecords(config *GetRecordsConfig) ([]Record, *errorto
 		params.Set("offset", _records.Offset)
 	}
 
-	return records, nil
+	return &records, nil
 }
