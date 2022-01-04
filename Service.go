@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strings"
 
 	errortools "github.com/leapforce-libraries/go_errortools"
@@ -22,8 +21,6 @@ const (
 // type
 //
 type Service struct {
-	baseID      string
-	tableName   string
 	apiKey      string
 	httpService *go_http.Service
 }
@@ -44,22 +41,12 @@ type NextPage struct {
 }
 
 type ServiceConfig struct {
-	BaseID    string
-	TableName string
-	APIKey    string
+	APIKey string
 }
 
 func NewService(serviceConfig *ServiceConfig) (*Service, *errortools.Error) {
 	if serviceConfig == nil {
 		return nil, errortools.ErrorMessage("ServiceConfig must not be a nil pointer")
-	}
-
-	if serviceConfig.BaseID == "" {
-		return nil, errortools.ErrorMessage("Service BaseID not provided")
-	}
-
-	if serviceConfig.TableName == "" {
-		return nil, errortools.ErrorMessage("Service TableName not provided")
 	}
 
 	if serviceConfig.APIKey == "" {
@@ -72,8 +59,6 @@ func NewService(serviceConfig *ServiceConfig) (*Service, *errortools.Error) {
 	}
 
 	return &Service{
-		baseID:      serviceConfig.BaseID,
-		tableName:   serviceConfig.TableName,
 		apiKey:      serviceConfig.APIKey,
 		httpService: httpService,
 	}, nil
@@ -103,10 +88,8 @@ func (service *Service) httpRequest(requestConfig *go_http.RequestConfig) (*http
 	return request, response, e
 }
 
-func (service *Service) url(path string) string {
-	t := &url.URL{Path: service.tableName}
-
-	return fmt.Sprintf("%s/%s/%s%s", apiURL, service.baseID, t.String(), path)
+func (service *Service) url(baseID string, tableName string, params string) string {
+	return fmt.Sprintf("%s/%s/%s?%s", apiURL, baseID, tableName, params)
 }
 
 func (service *Service) APIName() string {

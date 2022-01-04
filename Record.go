@@ -23,6 +23,8 @@ type Record struct {
 }
 
 type GetRecordsConfig struct {
+	BaseID          string
+	TableName       string
 	Fields          *[]string
 	FilterByFormula *string
 	MaxRecords      *int64
@@ -88,10 +90,9 @@ func (service *Service) GetRecords(config *GetRecordsConfig) (*[]Record, *errort
 
 		requestConfig := go_http.RequestConfig{
 			Method:        http.MethodGet,
-			URL:           service.url(fmt.Sprintf("?%s", params.Encode())),
+			URL:           service.url(config.BaseID, config.TableName, params.Encode()),
 			ResponseModel: &_records,
 		}
-		fmt.Println(requestConfig.URL)
 		_, _, e := service.httpRequest(&requestConfig)
 		if e != nil {
 			return nil, e
