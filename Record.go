@@ -17,13 +17,13 @@ type Records struct {
 }
 
 type Record struct {
-	ID          string                     `json:"id"`
+	Id          string                     `json:"id"`
 	Fields      map[string]json.RawMessage `json:"fields"`
 	CreatedTime a_types.DateTimeString     `json:"createdTime"`
 }
 
 type GetRecordsConfig struct {
-	BaseID          string
+	BaseId          string
 	TableName       string
 	Fields          *[]string
 	FilterByFormula *string
@@ -90,7 +90,7 @@ func (service *Service) GetRecords(config *GetRecordsConfig) (*[]Record, *errort
 
 		requestConfig := go_http.RequestConfig{
 			Method:        http.MethodGet,
-			URL:           service.url(config.BaseID, config.TableName, params.Encode()),
+			Url:           service.url(config.BaseId, config.TableName, params.Encode()),
 			ResponseModel: &_records,
 		}
 		_, _, e := service.httpRequest(&requestConfig)

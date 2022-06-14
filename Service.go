@@ -13,7 +13,7 @@ import (
 
 const (
 	apiName         string = "Airtable"
-	apiURL          string = "https://api.airtable.com/v0"
+	apiUrl          string = "https://api.airtable.com/v0"
 	DateTimeLayout  string = "2006-01-02T15:04:05.000Z"
 	defaultPageSize int64  = 100
 )
@@ -37,11 +37,11 @@ type Response struct {
 type NextPage struct {
 	Offset string `json:"offset"`
 	Path   string `json:"path"`
-	URI    string `json:"uri"`
+	Uri    string `json:"uri"`
 }
 
 type ServiceConfig struct {
-	APIKey string
+	ApiKey string
 }
 
 func NewService(serviceConfig *ServiceConfig) (*Service, *errortools.Error) {
@@ -49,8 +49,8 @@ func NewService(serviceConfig *ServiceConfig) (*Service, *errortools.Error) {
 		return nil, errortools.ErrorMessage("ServiceConfig must not be a nil pointer")
 	}
 
-	if serviceConfig.APIKey == "" {
-		return nil, errortools.ErrorMessage("Service APIKey not provided")
+	if serviceConfig.ApiKey == "" {
+		return nil, errortools.ErrorMessage("Service ApiKey not provided")
 	}
 
 	httpService, e := go_http.NewService(&go_http.ServiceConfig{})
@@ -59,7 +59,7 @@ func NewService(serviceConfig *ServiceConfig) (*Service, *errortools.Error) {
 	}
 
 	return &Service{
-		apiKey:      serviceConfig.APIKey,
+		apiKey:      serviceConfig.ApiKey,
 		httpService: httpService,
 	}, nil
 }
@@ -76,7 +76,7 @@ func (service *Service) httpRequest(requestConfig *go_http.RequestConfig) (*http
 		(*requestConfig).ErrorModel = &errorResponse
 	}
 
-	request, response, e := service.httpService.HTTPRequest(requestConfig)
+	request, response, e := service.httpService.HttpRequest(requestConfig)
 	if len(errorResponse.Errors) > 0 {
 		messages := []string{}
 		for _, message := range errorResponse.Errors {
@@ -88,22 +88,22 @@ func (service *Service) httpRequest(requestConfig *go_http.RequestConfig) (*http
 	return request, response, e
 }
 
-func (service *Service) url(baseID string, tableName string, params string) string {
-	return fmt.Sprintf("%s/%s/%s?%s", apiURL, baseID, tableName, params)
+func (service *Service) url(baseId string, tableName string, params string) string {
+	return fmt.Sprintf("%s/%s/%s?%s", apiUrl, baseId, tableName, params)
 }
 
-func (service *Service) APIName() string {
+func (service *Service) ApiName() string {
 	return apiName
 }
 
-func (service *Service) APIKey() string {
+func (service *Service) ApiKey() string {
 	return service.apiKey
 }
 
-func (service *Service) APICallCount() int64 {
+func (service *Service) ApiCallCount() int64 {
 	return service.httpService.RequestCount()
 }
 
-func (service *Service) APIReset() {
+func (service *Service) ApiReset() {
 	service.httpService.ResetRequestCount()
 }
